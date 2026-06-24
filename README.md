@@ -369,3 +369,176 @@ Repository Provider
 
 All behavior should eventually be driven entirely by environment variables, allowing new providers to be introduced without changing the framework code.
 
+# Configuration Examples
+
+## Harness Code Repository
+
+Use the following environment variables when creating Pull Requests in Harness Code.
+
+```text
+FINDING_PROVIDER=harness_sto
+
+REMEDIATION_PROVIDER=rules
+
+REPO_PROVIDER=harness_code
+
+HARNESS_BASE_URL=https://app.harness.io
+
+HARNESS_ACCOUNT_ID=<account_id>
+
+HARNESS_API_KEY=<api_key>
+
+HARNESS_SCAN_ID=<scan_id>
+
+LOCAL_REPO_DIR=C:\Users\keeva\Desktop\git\ai-remediation-poc
+
+BASE_BRANCH=main
+
+HARNESS_ORG_ID=avyka_assets
+
+HARNESS_PROJECT_ID=stryker_assets
+
+HARNESS_REPO_IDENTIFIER=ai-remediation-poc
+```
+
+Result:
+
+```text
+Harness STO
+        ↓
+Rule Engine
+        ↓
+Local Repository
+        ↓
+Git Branch
+        ↓
+Commit
+        ↓
+Push
+        ↓
+Harness Code Pull Request
+```
+
+---
+
+## GitLab Repository
+
+Use the following environment variables when creating Merge Requests in GitLab.
+
+```text
+FINDING_PROVIDER=harness_sto
+
+REMEDIATION_PROVIDER=rules
+
+REPO_PROVIDER=gitlab
+
+HARNESS_BASE_URL=https://app.harness.io
+
+HARNESS_ACCOUNT_ID=<account_id>
+
+HARNESS_API_KEY=<api_key>
+
+HARNESS_SCAN_ID=<scan_id>
+
+LOCAL_REPO_DIR=C:\Users\keeva\Desktop\git\gitlab-ai-remediation-poc
+
+BASE_BRANCH=main
+
+GITLAB_BASE_URL=https://gitlab.com
+
+GITLAB_PROJECT_ID=<numeric_project_id>
+
+GITLAB_TOKEN=<personal_access_token>
+```
+
+Result:
+
+```text
+Harness STO
+        ↓
+Rule Engine
+        ↓
+Local Repository
+        ↓
+Git Branch
+        ↓
+Commit
+        ↓
+Push
+        ↓
+GitLab Merge Request
+```
+
+---
+
+# Future Examples
+
+## GitHub Repository
+
+```text
+FINDING_PROVIDER=harness_sto
+
+REMEDIATION_PROVIDER=rules
+
+REPO_PROVIDER=github
+
+HARNESS_ACCOUNT_ID=<account_id>
+
+HARNESS_API_KEY=<api_key>
+
+HARNESS_SCAN_ID=<scan_id>
+
+LOCAL_REPO_DIR=<local_repo>
+
+GITHUB_OWNER=<owner>
+
+GITHUB_REPO=<repo>
+
+GITHUB_TOKEN=<token>
+```
+
+---
+
+## Claude AI Remediation
+
+```text
+FINDING_PROVIDER=harness_sto
+
+REMEDIATION_PROVIDER=claude
+
+REPO_PROVIDER=gitlab
+```
+
+Flow:
+
+```text
+Harness STO
+        ↓
+Claude Engine
+        ↓
+GitLab Merge Request
+```
+
+---
+
+## AIDA Remediation
+
+```text
+FINDING_PROVIDER=harness_sto
+
+REMEDIATION_PROVIDER=aida
+
+REPO_PROVIDER=harness_code
+```
+
+Flow:
+
+```text
+Harness STO
+        ↓
+AIDA Engine
+        ↓
+Harness Code Pull Request
+```
+
+
