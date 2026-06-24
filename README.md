@@ -27,86 +27,101 @@ For setting up your claude Agent SDK
 * curl -fsSL https://claude.ai/install.sh | bash - This is to install Claude CLI for ClaudeSDKClient - This is useful when you are using streaming and query options
 
 *****************************************************************************************************************************************
-agents/
-│
-├── README.md          ← Put it here
-│
-├── requirements.txt
-│
-├── remediation_agent/
-│     main.py
-│     remediation_engine.py
-│     file_patcher.py
-│     git_client.py
-│     pr_client.py
-│
-│     providers/
-│         harness_code_provider.py
-│         gitlab_provider.py
-│         github_provider.py
-│
-└── ...
 # Autonomous Remediation Framework
 
 ## Overview
 
-The Autonomous Remediation Framework automatically retrieves security findings, generates remediations, modifies source code, and creates Pull Requests.
+The Autonomous Remediation Framework automatically retrieves security findings, generates remediations, modifies source code, and creates Pull Requests or Merge Requests.
 
-The framework is intentionally designed to support multiple security scanners and multiple repository providers.
+The framework is designed to be provider-agnostic and extensible.
 
 Current implementation supports:
 
 * Harness STO as the finding source.
-* Harness Code as the repository provider.
+* Rule-based remediation engine.
+* Harness Code Pull Requests.
+* GitLab Merge Requests.
 
-The architecture is designed to support:
+Future support includes:
 
 * GitLab Security
 * SonarQube
 * Veracode
 * Snyk
+* OpenAI
+* Claude
+* AIDA
 * GitHub
-* GitLab
 * Bitbucket
 
 ---
 
-# End-to-End Workflow
+# Architecture
 
 ```text
-Security Findings
+Finding Provider
         ↓
-Finding Source Adapter
-        ↓
-Remediation Engine
+Remediation Provider
         ↓
 File Patcher
         ↓
 Git Operations
         ↓
 Repository Provider
-        ↓
-Pull Request
 ```
 
-Current flow:
+---
+
+# Current End-to-End Flows
+
+## Harness Code
 
 ```text
-Harness STO
+Harness Code Repo
         ↓
-Retrieve Findings
+Harness CI Pipeline
         ↓
-Generate Remediation
+Harness STO Scan
         ↓
-Modify Source Code
+STO Issues API
         ↓
-Create Branch
+Rule-Based Remediation
         ↓
-Commit Changes
+Update Source Code
         ↓
-Push Branch
+Git Branch
         ↓
-Create Pull Request
+Commit
+        ↓
+Push
+        ↓
+Harness Code Pull Request
+```
+
+---
+
+## GitLab
+
+```text
+GitLab Repository
+        ↓
+Harness CI Pipeline
+        ↓
+Harness STO Scan
+        ↓
+STO Issues API
+        ↓
+Rule-Based Remediation
+        ↓
+Update Source Code
+        ↓
+Git Branch
+        ↓
+Commit
+        ↓
+Push
+        ↓
+GitLab Merge Request
 ```
 
 ---
@@ -114,180 +129,172 @@ Create Pull Request
 # Project Structure
 
 ```text
-agents/
-
-requirements.txt
-
-README.md
-
 remediation_agent/
 
-    main.py
+config.py
 
-    remediation_engine.py
+main.py
 
-    file_patcher.py
+remediation_engine.py
 
-    git_client.py
+file_patcher.py
 
-    pr_client.py
+git_client.py
 
-    providers/
+pr_client.py
 
-        harness_code_provider.py
-
-        gitlab_provider.py
-
-        github_provider.py
+providers/
+    harness_code_provider.py
+    gitlab_provider.py
+    github_provider.py
 ```
 
 ---
 
 # Components
 
+## config.py
+
+Centralized configuration layer.
+
+All environment variable access is contained within this module.
+
+The rest of the framework consumes an AppConfig object rather than directly reading environment variables.
+
+---
+
 ## main.py
 
-Acts as the workflow orchestrator.
+Workflow orchestrator.
 
-Responsibilities:
+Responsible for:
 
-* Retrieve findings.
-* Parse vulnerabilities.
-* Generate fixes.
-* Apply code changes.
-* Commit changes.
-* Push branch.
-* Create Pull Request.
+* Retrieving findings
+* Generating fixes
+* Applying changes
+* Creating commits
+* Pushing branches
+* Creating PRs/MRs
 
 ---
 
 ## remediation_engine.py
 
-Generates remediations.
-
 Current implementation uses deterministic rules.
+
+Supported vulnerability patterns:
+
+* subprocess shell=True
 
 Future engines:
 
 * Claude
 * OpenAI
 * AIDA
-* Strands Agent
+* STO-guided engine
 
 ---
 
 ## file_patcher.py
 
-Updates source files.
-
-Responsibilities:
-
-* Open files.
-* Find vulnerable code.
-* Replace with remediated code.
-* Save changes.
+Responsible for modifying source files.
 
 ---
 
 ## git_client.py
 
-Handles Git operations.
-
-Functions:
+Handles:
 
 * create_branch()
 * commit_changes()
 * push_branch()
 
-These operations are repository-provider independent.
-
 ---
 
 ## pr_client.py
 
-Acts as the provider abstraction layer.
+Repository abstraction layer.
 
-Environment variable:
+Routes requests to:
 
-```text
-REPO_PROVIDER
-```
-
-Supported values:
-
-```text
-none
-harness_code
-gitlab
-github
-```
-
-Routes Pull Request creation to the appropriate provider.
+* Harness Code
+* GitLab
+* GitHub
 
 ---
 
 ## providers/
 
-Contains repository-specific implementations.
+Repository-specific implementations.
 
 ### harness_code_provider.py
 
-Creates Pull Requests in Harness Code.
+Creates Harness Code Pull Requests.
 
 ### gitlab_provider.py
 
-Future GitLab Merge Request implementation.
+Creates GitLab Merge Requests.
 
 ### github_provider.py
 
-Future GitHub Pull Request implementation.
+Future support.
 
 ---
 
 # Environment Variables
 
-## Harness STO
+## Finding Provider
 
 ```text
-HARNESS_ACCOUNT_ID
-
-HARNESS_API_KEY
-
-HARNESS_SCAN_ID
+FINDING_PROVIDER=harness_sto
 ```
 
-## Repository
+Future:
 
 ```text
-LOCAL_REPO_DIR
-
-BASE_BRANCH
+FINDING_PROVIDER=gitlab_security
+FINDING_PROVIDER=sonarqube
+FINDING_PROVIDER=veracode
 ```
+
+---
+
+## Remediation Provider
+
+```text
+REMEDIATION_PROVIDER=rules
+```
+
+Future:
+
+```text
+REMEDIATION_PROVIDER=sto
+REMEDIATION_PROVIDER=claude
+REMEDIATION_PROVIDER=openai
+REMEDIATION_PROVIDER=aida
+```
+
+---
 
 ## Repository Provider
 
-```text
-REPO_PROVIDER
-```
-
-Examples:
+Harness Code:
 
 ```text
 REPO_PROVIDER=harness_code
-
-REPO_PROVIDER=gitlab
-
-REPO_PROVIDER=github
 ```
 
-## Harness Code
+GitLab:
 
 ```text
-HARNESS_ORG_ID
+REPO_PROVIDER=gitlab
+```
 
-HARNESS_PROJECT_ID
+Future:
 
-HARNESS_REPO_IDENTIFIER
+```text
+REPO_PROVIDER=github
+REPO_PROVIDER=bitbucket
 ```
 
 ---
@@ -296,90 +303,69 @@ HARNESS_REPO_IDENTIFIER
 
 ✅ Retrieve vulnerabilities from Harness STO
 
-✅ Parse findings
+✅ Parse vulnerability metadata
 
 ✅ Generate remediations
 
-✅ Modify source code
+✅ Update source code
 
-✅ Create branch
+✅ Create Git branches
 
 ✅ Commit changes
 
-✅ Push branch
+✅ Push branches
 
-✅ Create Pull Request in Harness Code
+✅ Create Harness Code Pull Requests
+
+✅ Create GitLab Merge Requests
 
 ---
 
-# Architecture
+# Future Architecture
 
 ```text
 Harness STO
+GitLab Security
+SonarQube
+Veracode
+Snyk
+
         ↓
-Finding Parser
+
+Unified Finding Model
+
         ↓
-Remediation Engine
+
+Rules Engine
+Claude
+OpenAI
+AIDA
+
         ↓
-File Patcher
+
+Patch Object
+
         ↓
-Git Client
-        ↓
-Repository Provider
-        ↓
-Pull Request
+
+Repository Providers
+
+Harness Code
+GitLab
+GitHub
+Bitbucket
 ```
-
----
-
-# Future Enhancements
-
-## Finding Providers
-
-* Harness STO
-* GitLab Security
-* SonarQube
-* Veracode
-* Snyk
-* Trivy
-
----
-
-## Remediation Engines
-
-* Rules Engine
-* Claude
-* OpenAI
-* AIDA
-* Strands Agent
-
----
-
-## Repository Providers
-
-* Harness Code
-* GitLab
-* GitHub
-* Bitbucket
 
 ---
 
 # Long-Term Vision
 
 ```text
-Security Scanner
+Finding Provider
         ↓
-Unified Finding Model
-        ↓
-AI Agent
-        ↓
-File Patcher
-        ↓
-Git Operations
+Remediation Provider
         ↓
 Repository Provider
-        ↓
-Pull Request
 ```
 
-The framework is being designed as a provider-agnostic, extensible autonomous remediation platform.
+All behavior should eventually be driven entirely by environment variables, allowing new providers to be introduced without changing the framework code.
+
