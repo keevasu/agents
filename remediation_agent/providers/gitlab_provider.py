@@ -8,7 +8,7 @@ def create_merge_request(
     title: str,
     description: str,
 ) -> dict:
-    gitlab_base_url = os.environ["GITLAB_BASE_URL"].rstrip("/")
+    gitlab_base_url = os.environ.get("GITLAB_BASE_URL", "https://gitlab.com").rstrip("/")
     project_id = os.environ["GITLAB_PROJECT_ID"]
     token = os.environ["GITLAB_TOKEN"]
 
