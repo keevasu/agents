@@ -71,13 +71,17 @@ def main():
     scan_id = discover_scan_id(config)
     remediation_branch = config.remediation_branch or f"auto-remediate-{scan_id}"
 
+    print("=" * 80)
+    print("Autonomous Remediation Framework")
+    print("=" * 80)
     print(f"Finding Provider     : {config.finding_provider}")
     print(f"Remediation Provider : {config.remediation_provider}")
     print(f"Repository Provider  : {config.repo_provider}")
     print(f"Local Repo Dir       : {config.local_repo_dir}")
+    print(f"Execution ID         : {config.harness_execution_id}")
     print(f"Scan ID              : {scan_id}")
     print(f"Branch               : {remediation_branch}")
-    print()
+    print("=" * 80)
 
     create_branch(
         config.local_repo_dir,
