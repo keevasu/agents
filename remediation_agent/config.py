@@ -7,7 +7,8 @@ class AppConfig:
     harness_base_url: str
     harness_account_id: str
     harness_api_key: str
-    harness_scan_id: str
+    harness_scan_id: str | None
+    harness_execution_id: str | None
 
     finding_provider: str
     remediation_provider: str
@@ -15,7 +16,7 @@ class AppConfig:
 
     local_repo_dir: str
     base_branch: str
-    remediation_branch: str
+    remediation_branch: str | None
     pr_title: str
 
     harness_org_id: str | None
@@ -28,13 +29,15 @@ class AppConfig:
 
 
 def load_config() -> AppConfig:
-    harness_scan_id = os.environ["HARNESS_SCAN_ID"]
+    harness_scan_id = os.environ.get("HARNESS_SCAN_ID")
+    harness_execution_id = os.environ.get("HARNESS_EXECUTION_ID")
 
     return AppConfig(
         harness_base_url=os.environ.get("HARNESS_BASE_URL", "https://app.harness.io"),
         harness_account_id=os.environ["HARNESS_ACCOUNT_ID"],
         harness_api_key=os.environ["HARNESS_API_KEY"],
         harness_scan_id=harness_scan_id,
+        harness_execution_id=harness_execution_id,
 
         finding_provider=os.environ.get("FINDING_PROVIDER", "harness_sto"),
         remediation_provider=os.environ.get("REMEDIATION_PROVIDER", "rules"),
@@ -42,14 +45,8 @@ def load_config() -> AppConfig:
 
         local_repo_dir=os.environ["LOCAL_REPO_DIR"],
         base_branch=os.environ.get("BASE_BRANCH", "main"),
-        remediation_branch=os.environ.get(
-            "REMEDIATION_BRANCH",
-            f"auto-remediate-{harness_scan_id}",
-        ),
-        pr_title=os.environ.get(
-            "PR_TITLE",
-            "Auto-remediation for STO findings",
-        ),
+        remediation_branch=os.environ.get("REMEDIATION_BRANCH"),
+        pr_title=os.environ.get("PR_TITLE", "Auto-remediation for STO findings"),
 
         harness_org_id=os.environ.get("HARNESS_ORG_ID"),
         harness_project_id=os.environ.get("HARNESS_PROJECT_ID"),

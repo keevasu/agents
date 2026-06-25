@@ -1,27 +1,9 @@
-import requests
-
 from config import load_config
+from finding_sources.harness_sto import discover_scan_id, get_scan_issues
 from remediation_engine import generate_fix
 from file_patcher import apply_fix
 from git_client import create_branch, commit_changes, push_branch
 from pr_client import create_pull_request
-
-
-def get_sto_issues(config) -> list[dict]:
-    url = f"{config.harness_base_url}/sto/api/v2/scans/{config.harness_scan_id}/issues"
-
-    headers = {
-        "X-Api-Key": config.harness_api_key,
-    }
-
-    params = {
-        "accountId": config.harness_account_id,
-    }
-
-    response = requests.get(url, headers=headers, params=params, timeout=30)
-    response.raise_for_status()
-
-    return response.json().get("issues", [])
 
 
 def summarize_issue(issue: dict) -> dict:
@@ -86,20 +68,24 @@ def build_pr_description(scan_id: str, applied_fixes: list[dict]) -> str:
 def main():
     config = load_config()
 
+    scan_id = discover_scan_id(config)
+    remediation_branch = config.remediation_branch or f"auto-remediate-{scan_id}"
+
     print(f"Finding Provider     : {config.finding_provider}")
     print(f"Remediation Provider : {config.remediation_provider}")
     print(f"Repository Provider  : {config.repo_provider}")
     print(f"Local Repo Dir       : {config.local_repo_dir}")
-    print(f"Branch               : {config.remediation_branch}")
+    print(f"Scan ID              : {scan_id}")
+    print(f"Branch               : {remediation_branch}")
     print()
 
     create_branch(
         config.local_repo_dir,
-        config.remediation_branch,
+        remediation_branch,
         config.base_branch,
     )
 
-    issues = get_sto_issues(config)
+    issues = get_scan_issues(config, scan_id)
 
     print(f"Found {len(issues)} STO issues\n")
 
@@ -151,12 +137,12 @@ def main():
         print("\nNo commit created. Skipping push and PR/MR.")
         return
 
-    push_branch(config.local_repo_dir, config.remediation_branch)
+    push_branch(config.local_repo_dir, remediation_branch)
 
-    pr_description = build_pr_description(config.harness_scan_id, applied_fixes)
+    pr_description = build_pr_description(scan_id, applied_fixes)
 
     create_pull_request(
-        source_branch=config.remediation_branch,
+        source_branch=remediation_branch,
         target_branch=config.base_branch,
         title=config.pr_title,
         description=pr_description,
