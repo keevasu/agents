@@ -43,7 +43,10 @@ def load_config() -> AppConfig:
         remediation_provider=os.environ.get("REMEDIATION_PROVIDER", "rules"),
         repo_provider=os.environ.get("REPO_PROVIDER", "none"),
 
-        local_repo_dir=os.environ["LOCAL_REPO_DIR"],
+        local_repo_dir=os.environ.get(
+            "LOCAL_REPO_DIR",
+            os.getcwd()
+        ),
         base_branch=os.environ.get("BASE_BRANCH", "main"),
         remediation_branch=os.environ.get("REMEDIATION_BRANCH"),
         pr_title=os.environ.get("PR_TITLE", "Auto-remediation for STO findings"),
