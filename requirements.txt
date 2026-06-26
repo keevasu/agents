@@ -4,3 +4,4 @@ strands-agents[anthropic]
 claude-agent-sdk
 requests
 GitPython
+anyio
